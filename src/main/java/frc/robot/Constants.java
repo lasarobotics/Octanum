@@ -23,14 +23,14 @@ public final class Constants {
   }
 
   public static class DriveHardware {
-    public static VictorSPX.ID FRONT_LEFT_MOTOR_1_ID = new VictorSPX.ID("DriveHardware/FrontLeft/1", 6);
-    public static VictorSPX.ID FRONT_LEFT_MOTOR_2_ID = new VictorSPX.ID("DriveHardware/FrontLeft/2", 7);
-    public static VictorSPX.ID FRONT_RIGHT_MOTOR_1_ID = new VictorSPX.ID("DriveHardware/FrontLeft/1", 2);
-    public static VictorSPX.ID FRONT_RIGHT_MOTOR_2_ID = new VictorSPX.ID("DriveHardware/FrontLeft/2", 3);
-    public static VictorSPX.ID REAR_LEFT_MOTOR_1_ID = new VictorSPX.ID("DriveHardware/FrontLeft/1", 4);
-    public static VictorSPX.ID REAR_LEFT_MOTOR_2_ID = new VictorSPX.ID("DriveHardware/FrontLeft/2", 5);
-    public static int REAR_RIGHT_MOTOR_1_ID = 0;
-    public static int REAR_RIGHT_MOTOR_2_ID = 1;
+    public static VictorSPX.ID FRONT_LEFT_MASTER_MOTOR_ID = new VictorSPX.ID("DriveHardware/FrontLeft/1", 6);
+    public static VictorSPX.ID FRONT_LEFT_SLAVE_MOTOR_ID = new VictorSPX.ID("DriveHardware/FrontLeft/2", 7);
+    public static VictorSPX.ID FRONT_RIGHT_MASTER_MOTOR_ID = new VictorSPX.ID("DriveHardware/FrontLeft/1", 2);
+    public static VictorSPX.ID FRONT_RIGHT_SLAVE_MOTOR_ID = new VictorSPX.ID("DriveHardware/FrontLeft/2", 3);
+    public static VictorSPX.ID REAR_LEFT_MASTER_MOTOR_ID = new VictorSPX.ID("DriveHardware/FrontLeft/1", 4);
+    public static VictorSPX.ID REAR_LEFT_SLAVE_MOTOR_ID = new VictorSPX.ID("DriveHardware/FrontLeft/2", 5);
+    public static int REAR_RIGHT_MASTER_MOTOR_ID = 0;
+    public static int REAR_RIGHT_SLAVE_MOTOR_ID = 1;
     public static DoubleSolenoid.ID SOLENOID_1_ID = new DoubleSolenoid.ID("DriveHardware/DoubleSolenoid/1", PneumaticsModuleType.REVPH, 6, 9);
     public static DoubleSolenoid.ID SOLENOID_2_ID = new DoubleSolenoid.ID("DriveHardware/DoubleSolenoid/2", PneumaticsModuleType.REVPH, 7, 8);
   }

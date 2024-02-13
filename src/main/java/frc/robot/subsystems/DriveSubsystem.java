@@ -6,12 +6,14 @@ package frc.robot.subsystems;
 
 import java.util.function.DoubleSupplier;
 
-import org.lasarobotics.hardware.ctre.VictorSPX;
+// import org.lasarobotics.hardware.ctre.VictorSPX;
 import org.lasarobotics.hardware.generic.DoubleSolenoid;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
 
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
+import edu.wpi.first.wpilibj.drive.MecanumDrive;
 import edu.wpi.first.wpilibj.motorcontrol.VictorSP;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -19,42 +21,43 @@ import frc.robot.Constants;
 
 public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   public static class Hardware {
-    private VictorSPX frontLeftMotor1, frontLeftMotor2;
-    private VictorSPX frontRightMotor1, frontRightMotor2;
-    private VictorSPX rearLeftMotor1, rearLeftMotor2;
-    private VictorSP rearRightMotor1, rearRightMotor2;
+    private WPI_VictorSPX frontLeftMasterMotor, frontLeftSlaveMotor;
+    private WPI_VictorSPX frontRightMasterMotor, frontRightSlaveMotor;
+    private WPI_VictorSPX rearLeftMasterMotor, rearLeftSlaveMotor;
+    private VictorSP rearRightMasterMotor, rearRightSlaveMotor;
 
     private DoubleSolenoid solenoid1, solenoid2;
 
     public Hardware(
-        VictorSPX frontLeftMotor1, VictorSPX frontLeftMotor2,
-        VictorSPX frontRightMotor1, VictorSPX frontRightMotor2,
-        VictorSPX rearLeftMotor1, VictorSPX rearLeftMotor2,
-        VictorSP rearRightMotor1, VictorSP rearRightMotor2,
+        WPI_VictorSPX frontLeftMasterMotor, WPI_VictorSPX frontLeftSlaveMotor,
+        WPI_VictorSPX frontRightMasterMotor, WPI_VictorSPX frontRightSlaveMotor,
+        WPI_VictorSPX rearLeftMasterMotor, WPI_VictorSPX rearLeftSlaveMotor,
+        VictorSP rearRightMasterMotor, VictorSP rearRightSlaveMotor,
         DoubleSolenoid solenoid1, DoubleSolenoid solenoid2) {
-      this.frontLeftMotor1 = frontLeftMotor1;
-      this.frontLeftMotor2 = frontLeftMotor2;
-      this.frontRightMotor1 = frontRightMotor1;
-      this.frontRightMotor2 = frontRightMotor2;
-      this.rearLeftMotor1 = rearLeftMotor1;
-      this.rearLeftMotor2 = rearLeftMotor2;
-      this.rearRightMotor1 = rearRightMotor1;
-      this.rearRightMotor2 = rearRightMotor2;
+      this.frontLeftMasterMotor = frontLeftMasterMotor;
+      this.frontLeftSlaveMotor = frontLeftSlaveMotor;
+      this.frontRightMasterMotor = frontRightMasterMotor;
+      this.frontRightSlaveMotor = frontRightSlaveMotor;
+      this.rearLeftMasterMotor = rearLeftMasterMotor;
+      this.rearLeftSlaveMotor = rearLeftSlaveMotor;
+      this.rearRightMasterMotor = rearRightMasterMotor;
+      this.rearRightSlaveMotor = rearRightSlaveMotor;
 
       this.solenoid1 = solenoid1;
       this.solenoid2 = solenoid2;
     }
   }
 
-  // Initializes motors, drivetrain object, and navx
-  private VictorSPX m_frontLeftMotor1, m_frontLeftMotor2;
-  private VictorSPX m_frontRightMotor1, m_frontRightMotor2;
-  private VictorSPX m_rearLeftMotor1, m_rearLeftMotor2;
-  private VictorSP m_rearRightMotor1, m_rearRightMotor2;
+  // Have to use vanilla VictorSPX controllers for now because of lack of follow method in PurpleLib
+  private WPI_VictorSPX m_frontLeftMasterMotor, m_frontLeftSlaveMotor;
+  private WPI_VictorSPX m_frontRightMasterMotor, m_frontRightSlaveMotor;
+  private WPI_VictorSPX m_rearLeftMasterMotor, m_rearLeftSlaveMotor;
+  private VictorSP m_rearRightMasterMotor, m_rearRightSlaveMotor;
+
+  private boolean m_isMechanum;
+  private MecanumDrive m_mecanumDrive;
 
   private DoubleSolenoid m_solenoid1, m_solenoid2;
-
-  private boolean m_isMechanum; 
 
   /**
    * Create an instance of DriveSubsystem
@@ -65,25 +68,28 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * @param drivetrainHardware   Hardware devices required by drivetrain
    */
   public DriveSubsystem(Hardware drivetrainHardware) {
-    // Instantiates motors and navx
-    this.m_frontLeftMotor1 = drivetrainHardware.frontLeftMotor1;
-    this.m_frontLeftMotor2 = drivetrainHardware.frontLeftMotor2;
-    this.m_frontRightMotor1 = drivetrainHardware.frontRightMotor1;
-    this.m_frontRightMotor2 = drivetrainHardware.frontRightMotor2;
-    this.m_rearLeftMotor1 = drivetrainHardware.rearLeftMotor1;
-    this.m_rearLeftMotor2 = drivetrainHardware.rearLeftMotor2;
-    this.m_rearRightMotor1 = drivetrainHardware.rearRightMotor1;
-    this.m_rearRightMotor2 = drivetrainHardware.rearRightMotor2;
+    this.m_frontLeftMasterMotor = drivetrainHardware.frontLeftMasterMotor;
+    this.m_frontLeftSlaveMotor = drivetrainHardware.frontLeftSlaveMotor;
+    this.m_frontRightMasterMotor = drivetrainHardware.frontRightMasterMotor;
+    this.m_frontRightSlaveMotor = drivetrainHardware.frontRightSlaveMotor;
+    this.m_rearLeftMasterMotor = drivetrainHardware.rearLeftMasterMotor;
+    this.m_rearLeftSlaveMotor = drivetrainHardware.rearLeftSlaveMotor;
+    this.m_rearRightMasterMotor = drivetrainHardware.rearRightMasterMotor;
+    this.m_rearRightSlaveMotor = drivetrainHardware.rearRightSlaveMotor;
 
     this.m_solenoid1 = drivetrainHardware.solenoid1;
     this.m_solenoid2 = drivetrainHardware.solenoid2;
 
-    m_frontRightMotor1.setInverted(true);
-    m_frontRightMotor2.setInverted(true);
-    m_rearRightMotor1.setInverted(true);
-    m_rearRightMotor2.setInverted(true);
+    m_frontRightMasterMotor.setInverted(true);
+    m_rearRightMasterMotor.setInverted(true);
+
+    m_frontLeftSlaveMotor.follow(m_frontLeftMasterMotor);
+    m_frontRightSlaveMotor.follow(m_frontRightMasterMotor);
+    m_rearLeftSlaveMotor.follow(m_rearLeftMasterMotor);
+    m_rearRightMasterMotor.addFollower(m_rearRightSlaveMotor); // Because VictorSP is PWM only :(
 
     m_isMechanum = false;
+    m_mecanumDrive = new MecanumDrive(m_frontLeftMasterMotor, m_rearLeftMasterMotor, m_frontRightMasterMotor, m_rearRightMasterMotor);
     m_solenoid1.set(Value.kReverse);
     m_solenoid2.set(Value.kReverse);
   }
@@ -94,15 +100,16 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
    * @return hardware object containing all necessary devices for this subsystem
    */
   public static Hardware initializeHardware() {
+    // Have to use vanilla VictorSPX controllers for now because of lack of follow method in PurpleLib
     Hardware drivetrainHardware = new Hardware(
-      new VictorSPX(Constants.DriveHardware.FRONT_LEFT_MOTOR_1_ID),
-      new VictorSPX(Constants.DriveHardware.FRONT_LEFT_MOTOR_2_ID),
-      new VictorSPX(Constants.DriveHardware.FRONT_RIGHT_MOTOR_1_ID),
-      new VictorSPX(Constants.DriveHardware.FRONT_RIGHT_MOTOR_2_ID),
-      new VictorSPX(Constants.DriveHardware.REAR_LEFT_MOTOR_1_ID),
-      new VictorSPX(Constants.DriveHardware.REAR_LEFT_MOTOR_2_ID),
-      new VictorSP(Constants.DriveHardware.REAR_RIGHT_MOTOR_1_ID),
-      new VictorSP(Constants.DriveHardware.REAR_RIGHT_MOTOR_2_ID),
+      new WPI_VictorSPX(Constants.DriveHardware.FRONT_LEFT_MASTER_MOTOR_ID.deviceID),
+      new WPI_VictorSPX(Constants.DriveHardware.FRONT_LEFT_SLAVE_MOTOR_ID.deviceID),
+      new WPI_VictorSPX(Constants.DriveHardware.FRONT_RIGHT_MASTER_MOTOR_ID.deviceID),
+      new WPI_VictorSPX(Constants.DriveHardware.FRONT_RIGHT_SLAVE_MOTOR_ID.deviceID),
+      new WPI_VictorSPX(Constants.DriveHardware.REAR_LEFT_MASTER_MOTOR_ID.deviceID),
+      new WPI_VictorSPX(Constants.DriveHardware.REAR_LEFT_SLAVE_MOTOR_ID.deviceID),
+      new VictorSP(Constants.DriveHardware.REAR_RIGHT_MASTER_MOTOR_ID),
+      new VictorSP(Constants.DriveHardware.REAR_RIGHT_SLAVE_MOTOR_ID),
       new DoubleSolenoid(Constants.DriveHardware.SOLENOID_1_ID, 1),
       new DoubleSolenoid(Constants.DriveHardware.SOLENOID_2_ID, 1)
     );
@@ -112,19 +119,14 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
 
   // Controls the robot during teleop
   private void arcadeDrive(double speed, double turn) {
-    m_frontLeftMotor1.set(ControlMode.PercentOutput, speed - turn);
-    m_frontLeftMotor2.set(ControlMode.PercentOutput, speed - turn);
-    m_rearLeftMotor1.set(ControlMode.PercentOutput, speed - turn);
-    m_rearLeftMotor2.set(ControlMode.PercentOutput, speed - turn);
-    
-    m_frontRightMotor1.set(ControlMode.PercentOutput, speed + turn);
-    m_frontRightMotor2.set(ControlMode.PercentOutput, speed - turn);
-    m_rearRightMotor1.set(speed - turn);
-    m_rearRightMotor2.set(speed - turn);
+    m_frontLeftMasterMotor.set(ControlMode.PercentOutput, speed - turn);
+    m_rearLeftMasterMotor.set(ControlMode.PercentOutput, speed - turn);
+    m_frontRightMasterMotor.set(ControlMode.PercentOutput, speed + turn);
+    m_rearRightMasterMotor.set(speed + turn);
   }
 
   private void mechanumDrive(double speed, double strafe, double turn) {
-
+    m_mecanumDrive.driveCartesian(speed, strafe, turn);
   }
 
   private void toggleMechanum() {
@@ -140,12 +142,11 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     }
   }
 
-  public Command driveCommand(DoubleSupplier speedRequest, DoubleSupplier turnRequest) {
+  public Command driveCommand(DoubleSupplier speedRequest, DoubleSupplier strafeRequest, DoubleSupplier turnRequest) {
     return run(
       () -> {
         if (m_isMechanum)
-          // mechanumDrive(speedRequest.getAsDouble(), turnRequest.getAsDouble());
-          System.out.println("Test");
+          mechanumDrive(speedRequest.getAsDouble(), strafeRequest.getAsDouble(), turnRequest.getAsDouble());
         else
           arcadeDrive(speedRequest.getAsDouble(), turnRequest.getAsDouble());
       });
@@ -157,13 +158,13 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
 
   @Override
   public void close() {
-    m_frontLeftMotor1.close();
-    m_frontLeftMotor2.close();
-    m_frontRightMotor1.close();
-    m_frontRightMotor2.close();
-    m_rearLeftMotor1.close();
-    m_rearLeftMotor2.close();
-    m_rearRightMotor1.close();
-    m_rearRightMotor2.close();
+    m_frontLeftMasterMotor.close();
+    m_frontLeftSlaveMotor.close();
+    m_frontRightMasterMotor.close();
+    m_frontRightSlaveMotor.close();
+    m_rearLeftMasterMotor.close();
+    m_rearLeftSlaveMotor.close();
+    m_rearRightMasterMotor.close();
+    m_rearRightSlaveMotor.close();
   }
 }
