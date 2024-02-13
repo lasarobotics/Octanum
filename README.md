@@ -1,0 +1,2 @@
+# ExampleTankDrive
+This project demonstrates how to use `PurpleLib` with a simple 4-motor tank drive (using SparkMaxes and NEOs) for benefits such as automatic AdvantageKit logging. The project also features simple tests in `DriveSubsystemTest.java`, demonstrating how to use `PurpleLib` with the `mockito` testing framework.
