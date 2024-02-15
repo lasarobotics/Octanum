@@ -38,6 +38,7 @@ public class RobotContainer {
 
     // A command - toggle mechanum
     PRIMARY_CONTROLLER.a().onTrue(DRIVE_SUBSYSTEM.toggleMechanumCommand());
+    PRIMARY_CONTROLLER.povLeft().whileTrue(DRIVE_SUBSYSTEM.runRightFront());
   }
 
   /**

@@ -10,6 +10,7 @@ import java.util.function.DoubleSupplier;
 import org.lasarobotics.hardware.generic.DoubleSolenoid;
 
 import com.ctre.phoenix.motorcontrol.ControlMode;
+import com.ctre.phoenix.motorcontrol.NeutralMode;
 import com.ctre.phoenix.motorcontrol.can.WPI_VictorSPX;
 
 import edu.wpi.first.wpilibj.DoubleSolenoid.Value;
@@ -78,6 +79,13 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
     this.m_rearRightMasterMotor = drivetrainHardware.rearRightMasterMotor;
     this.m_rearRightSlaveMotor = drivetrainHardware.rearRightSlaveMotor;
 
+    this.m_frontLeftMasterMotor.setNeutralMode(NeutralMode.Brake);
+    this.m_frontLeftSlaveMotor.setNeutralMode(NeutralMode.Brake);
+    this.m_frontRightMasterMotor.setNeutralMode(NeutralMode.Brake);
+    this.m_frontRightSlaveMotor.setNeutralMode(NeutralMode.Brake);
+    this.m_rearLeftMasterMotor.setNeutralMode(NeutralMode.Brake);
+    this.m_rearLeftSlaveMotor.setNeutralMode(NeutralMode.Brake);
+
     this.m_solenoid1 = drivetrainHardware.solenoid1;
     this.m_solenoid2 = drivetrainHardware.solenoid2;
 
@@ -120,18 +128,20 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
 
   // Controls the robot during teleop
   private void arcadeDrive(double speed, double turn) {
-    m_frontLeftMasterMotor.set(ControlMode.PercentOutput, speed - turn);
-    m_rearLeftMasterMotor.set(ControlMode.PercentOutput, speed - turn);
-    m_frontRightMasterMotor.set(ControlMode.PercentOutput, speed + turn);
-    m_rearRightMasterMotor.set(speed + turn);
+    m_frontLeftMasterMotor.set(ControlMode.PercentOutput, speed + turn);
+    m_rearLeftMasterMotor.set(ControlMode.PercentOutput, speed + turn);
+    m_frontRightMasterMotor.set(ControlMode.PercentOutput, speed - turn);
+    m_rearRightMasterMotor.set(speed - turn);
   }
 
   private void mechanumDrive(double speed, double strafe, double turn) {
-    m_mecanumDrive.driveCartesian(speed, strafe, turn);
+    m_mecanumDrive.driveCartesian(speed, -strafe, turn);
   }
 
   private void toggleMechanum() {
     m_isMechanum = !m_isMechanum;
+
+    System.out.println("flipped to: " + m_isMechanum);
 
     if (m_isMechanum) {
       m_solenoid1.set(Value.kForward);
@@ -146,11 +156,24 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
   public Command driveCommand(DoubleSupplier speedRequest, DoubleSupplier strafeRequest, DoubleSupplier turnRequest) {
     return run(
       () -> {
-        if (m_isMechanum)
+        if (m_isMechanum) {
           mechanumDrive(speedRequest.getAsDouble(), strafeRequest.getAsDouble(), turnRequest.getAsDouble());
-        else
+        }
+        else {
+          mechanumDrive(0, 0, 0);
           arcadeDrive(speedRequest.getAsDouble(), turnRequest.getAsDouble());
+        }
       });
+  }
+
+  public Command runRightFront() {
+    return runEnd(() -> m_rearRightMasterMotor.set(1),
+    () -> m_rearRightMasterMotor.stopMotor());
+  }
+
+  public Command runLeftRear() {
+    return runEnd(() -> m_rearLeftMasterMotor.set(1),
+    () -> m_rearLeftMasterMotor.stopMotor());
   }
 
   public Command toggleMechanumCommand() {
