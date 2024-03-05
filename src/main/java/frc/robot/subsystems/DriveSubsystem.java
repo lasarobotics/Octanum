@@ -60,7 +60,6 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
 
   private DoubleSolenoid m_solenoid1, m_solenoid2;
 
-
   /**
    * Create an instance of DriveSubsystem
    * <p>
@@ -140,8 +139,6 @@ public class DriveSubsystem extends SubsystemBase implements AutoCloseable {
 
   private void toggleMechanum() {
     m_isMechanum = !m_isMechanum;
-
-    System.out.println("flipped to: " + m_isMechanum);
 
     if (m_isMechanum) {
       m_solenoid1.set(Value.kForward);
